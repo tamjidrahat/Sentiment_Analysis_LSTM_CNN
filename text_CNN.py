@@ -1,6 +1,4 @@
 import tensorflow as tf
-import numpy as np
-
 
 class TextCNN(object):
     """
@@ -41,32 +39,29 @@ class TextCNN(object):
         # We use filters of different size. So, Convolution produces tensors of different shape.
         # We store them in pooled_outputs[] list
         pooled_outputs = []
+
         for i, filter_size in enumerate(filter_sizes):  #for each filter size, ex: 2, 3, 4
 
             with tf.name_scope("conv-maxpool-%s" % filter_size):
-                # Convolution Layer
-                filter_shape = [filter_size, embedding_size, 1, num_filters]    #each filter is 2D. So depth is 1
-                W = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name="W")
+                print "embedded chars shape: "+ str(self.embedded_chars_expanded.shape)
+                print "embedding size: "+str(embedding_size)
 
-                b = tf.Variable(tf.constant(0.1, shape=[num_filters]), name="b")
-                conv = tf.nn.conv2d(
-                    self.embedded_chars_expanded,#  input
-                    W, #    filters weight
-                    strides=[1, 1, 1, 1],
-                    padding="VALID",
-                    name="conv")
+                conv1 = tf.layers.conv2d(self.embedded_chars_expanded
+                                         ,filters=num_filters
+                                         ,kernel_size=[filter_size, embedding_size]
+                                         ,strides=(1,1)
+                                         ,padding='valid'
+                                         ,activation=tf.nn.relu
+                                         )
 
-                # Apply ReLu
-                activation = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
-                # Maxpooling over the outputs
-                pooled = tf.nn.max_pool(
-                    activation,
-                    ksize=[1, sequence_length - filter_size + 1, 1, 1], #size of window for each dimension of input
-                    strides=[1, 1, 1, 1],
-                    padding='VALID',
-                    name="pool")
-                #after maxpooling, tensor dim = [batch_size, 1, 1, num_filters]
-                pooled_outputs.append(pooled)
+
+
+                pool1 = tf.layers.max_pooling2d(conv1
+                                                ,pool_size=[sequence_length - filter_size + 1, 1]
+                                                ,strides=1
+                                                ,padding='valid'
+                                                ,name='pool1')
+                pooled_outputs.append(pool1)
 
         # Combine all the pooled features
         num_filters_total = num_filters * len(filter_sizes)
@@ -77,30 +72,15 @@ class TextCNN(object):
         self.h_pool_flat = tf.reshape(self.h_pool, [-1, num_filters_total]) #   reshape into [batch_size, num_filters_total]
 
 
-        # Add dropout
-        with tf.name_scope("dropout"):
-            self.h_drop = tf.nn.dropout(self.h_pool_flat, self.dropout_keep_prob)
+        dropout = tf.layers.dropout(self.h_pool_flat, rate= 1.- self.dropout_keep_prob)
+        logits = tf.layers.dense(dropout, 2)
 
-        # Final (unnormalized) scores and predictions
-        with tf.name_scope("output"):
-            W = tf.get_variable(
-                "W",
-                shape=[num_filters_total, num_classes],
-                initializer=tf.contrib.layers.xavier_initializer())
-            b = tf.Variable(tf.constant(0.1, shape=[num_classes]), name="b")
 
-            l2_loss += tf.nn.l2_loss(W)
-            l2_loss += tf.nn.l2_loss(b)
+        self.classes = tf.argmax(input=logits, axis=1),
+        self.probabilities = tf.nn.softmax(logits)
 
-            self.scores = tf.nn.xw_plus_b(self.h_drop, W, b, name="scores") #   xW+b
-            self.predictions = tf.argmax(self.scores, 1, name="predictions")
+        self.loss = tf.losses.softmax_cross_entropy(self.input_y, logits)
 
-        # CalculateMean cross-entropy loss
-        with tf.name_scope("loss"):
-            losses = tf.nn.softmax_cross_entropy_with_logits(logits=self.scores, labels=self.input_y)
-            self.loss = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss
+        correct_predictions = tf.equal(self.classes, tf.argmax(self.input_y, 1))
+        self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"))
 
-        # Accuracy
-        with tf.name_scope("accuracy"):
-            correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
-            self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
