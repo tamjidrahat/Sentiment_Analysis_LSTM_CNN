@@ -1,47 +1,44 @@
 import tensorflow as tf
 import os
-import time
 import datetime
 from text_CNN import TextCNN
 import cPickle as pickle
 import numpy as np
 
-##Courtesy: http://www.wildml.com/2015/12/implementing-a-cnn-for-text-classification-in-tensorflow/
 
-############## Parameters #########
+##### Parameters ###################################
 
 
 # Model Hyperparameters
-tf.flags.DEFINE_integer("embedding_dim", 128, "Dimensionality of character embedding (default: 128)")
-tf.flags.DEFINE_string("filter_sizes", "3,4,5", "Comma-separated filter sizes (default: '3,4,5')")
-tf.flags.DEFINE_integer("num_filters", 128, "Number of filters per filter size (default: 128)")
-tf.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
-tf.flags.DEFINE_float("l2_reg_lambda", 0.1, "L2 regularization lambda (default: 0.0)")
+embedding_dim = 128
+filter_sizes = [3,4,5]
+num_filters = 128
+dropout_rate = 0.5
+L2_lambda = 0.1
 
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-tf.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 100, "Evaluate model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (default: 100)")
-tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
-# Misc Parameters
-tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
-tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+batch_size = 64
+num_epochs = 300
+evaluate_every = 60
+checkpoint_every = 100
+num_checkpoints = 5
 
-FLAGS = tf.flags.FLAGS
-FLAGS._parse_flags()
-print("\nParameters:")
-for attr, value in sorted(FLAGS.__flags.items()):
-    print("{}={}".format(attr.upper(), value))
+
+allow_soft_placement = True
+log_device_placement = False
 
 
 
-### DATA PROCESSING ######
+
+
+
+
+### DATA PROCESSING ######################################
 
 reviews_list, sentiments_vector = pickle.load(open("imdb_train_data.pkl", "rb"))
 
 max_review_length = max([len(x.split(" ")) for x in reviews_list])
-print max_review_length
+
 
 vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(max_review_length)
 
@@ -83,13 +80,16 @@ def batch_iter(data, batch_size, num_epochs, shuffle=True):
             start_index = batch_num * batch_size
             end_index = min((batch_num + 1) * batch_size, data_size)
             yield shuffled_data[start_index:end_index]
-# Training
-# ==================================================
+
+
+
+
+##### Training  ###################################
 
 with tf.Graph().as_default():
     session_conf = tf.ConfigProto(
-      allow_soft_placement=FLAGS.allow_soft_placement,
-      log_device_placement=FLAGS.log_device_placement)
+      allow_soft_placement = allow_soft_placement,
+      log_device_placement = log_device_placement)
 
     sess = tf.Session(config=session_conf)
 
@@ -98,10 +98,10 @@ with tf.Graph().as_default():
             sequence_length= trainX.shape[1],
             num_classes= trainY.shape[1],
             vocab_size= vocab_size,
-            embedding_size=FLAGS.embedding_dim,
-            filter_sizes=list(map(int, FLAGS.filter_sizes.split(","))),
-            num_filters=FLAGS.num_filters,
-            l2_reg_lambda=FLAGS.l2_reg_lambda)
+            embedding_size=embedding_dim,
+            filter_sizes=filter_sizes,
+            num_filters=num_filters,
+            l2_reg_lambda=L2_lambda)
 
         # Define Training procedure
         global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -127,7 +127,7 @@ with tf.Graph().as_default():
             feed_dict = {
               cnn.input_x: x_batch,
               cnn.input_y: y_batch,
-              cnn.dropout_keep_prob: FLAGS.dropout_keep_prob
+              cnn.dropout_keep_prob: dropout_rate
             }
             _, step, loss, accuracy= sess.run(
                 [train_op, global_step, cnn.loss, cnn.accuracy],
@@ -156,8 +156,7 @@ with tf.Graph().as_default():
 
 
         # Generate batches
-        batches = batch_iter(
-            list(zip(trainX, trainY)), FLAGS.batch_size, FLAGS.num_epochs)
+        batches = batch_iter(list(zip(trainX, trainY)), batch_size, num_epochs)
         # Training loop. For each batch...
 
         for batch in batches:
@@ -167,7 +166,7 @@ with tf.Graph().as_default():
 
             current_step = tf.train.global_step(sess, global_step)
 
-            if current_step % FLAGS.evaluate_every == 0:
+            if current_step % evaluate_every == 0:
                 dev_step(testX, testY)
 
 

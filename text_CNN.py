@@ -7,7 +7,7 @@ class TextCNN(object):
     """
     def __init__(
       self, sequence_length, num_classes, vocab_size,
-      embedding_size, filter_sizes, num_filters, l2_reg_lambda=0.0):
+      embedding_size, filter_sizes, num_filters):
 
         # Placeholders for input, output and dropout
         self.input_x = tf.placeholder(tf.int32, [None, sequence_length], name="input_x")
@@ -16,8 +16,6 @@ class TextCNN(object):
         # dropout is input here. bcz we don't use it during test time
         self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
-        # Keeping track of l2 regularization loss (optional)
-        l2_loss = tf.constant(0.0)
 
         ##### Embedding layer ########
 
@@ -42,7 +40,7 @@ class TextCNN(object):
 
         for i, filter_size in enumerate(filter_sizes):  #for each filter size, ex: 2, 3, 4
 
-            with tf.name_scope("conv-maxpool-%s" % filter_size):
+            with tf.name_scope("net-%s" % filter_size):
                 print "embedded chars shape: "+ str(self.embedded_chars_expanded.shape)
                 print "embedding size: "+str(embedding_size)
 
