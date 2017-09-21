@@ -30,5 +30,5 @@ Embedding size = 128
 
 **After 200 steps,**
 		Training accuracy: 50%
-![Image courtesy:http://www.wildml.com/2015/11/understanding-convolutional-neural-networks-for-nlp/](https://github.com/tamjidrahat/Sentiment_Analysis_LSTM_CNN/blob/master/image_cnntext.png "Convolution -> Pooling")
-
+![](https://github.com/tamjidrahat/Sentiment_Analysis_LSTM_CNN/blob/master/image_cnntext.png "Convolution -> Pooling")
+Image courtesy:http://www.wildml.com/2015/11/understanding-convolutional-neural-networks-for-nlp/
