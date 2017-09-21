@@ -13,7 +13,7 @@ Dropout keep_prob = 0.5
 
 Epochs = 200
 
-After 1500 steps, 
+**After 1500 steps,** 
 		Train Accuracy = 100%
 		Validation accuracy = 88%
 
@@ -28,7 +28,7 @@ Validation examples = 2500
 Embedding size = 128
 
 
-After 200 steps, 
+**After 200 steps,**
 		Training accuracy: 50%
-
+![Image courtesy:http://www.wildml.com/2015/11/understanding-convolutional-neural-networks-for-nlp/](https://github.com/tamjidrahat/Sentiment_Analysis_LSTM_CNN/blob/master/image_cnntext.png "Convolution -> Pooling")
 
