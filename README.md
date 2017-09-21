@@ -1,6 +1,6 @@
-# Sentiment_Analysis_LSTM
+#Sentiment Analysis in IMDB movie review dataset
 
-::Sentiment analysis of IMDB Movie Review dataset with CNN::
+## ::Sentiment analysis of IMDB Movie Review dataset with CNN::
 Convolution with filter size 2,3,4.
 Embedding -> Convolution -> max-pooling -> dropout -> Predictions -> Loss
 
@@ -21,7 +21,7 @@ After 1500 steps,
 
 
 
-::Sentiment analysis of IMDB Movie Review dataset with LSTM+RNN::
+## ::Sentiment analysis of IMDB Movie Review dataset with LSTM+RNN::
 LSTM units = 10
 Train examples = 22500
 Validation examples = 2500
